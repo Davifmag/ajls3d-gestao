@@ -1,7 +1,7 @@
 {
-  "name": "Agenda AJLS 3D",
+  "name": "AJLS 3D - Gestão de Pedidos",
   "short_name": "AJLS 3D",
-  "description": "Orçamentos e agenda para impressões 3D",
+  "description": "Orçamentos, pedidos e agenda de impressão 3D",
   "lang": "pt-BR",
   "start_url": "./index.html",
   "scope": "./",
