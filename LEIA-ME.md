@@ -1,4 +1,4 @@
-# Agenda de Doces (PWA)
+# Agenda AJLS 3D (PWA)
 
 Arquivos do projeto:
 - `index.html` – estrutura das telas
