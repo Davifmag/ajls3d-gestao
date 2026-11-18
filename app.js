@@ -1,4 +1,4 @@
-const $=s=>document.querySelector(s), K='doces-agenda-v1';
+const $=s=>document.querySelector(s), K='ajls-pedidos';
 const iso=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const plus=n=>{const d=new Date();d.setDate(d.getDate()+n);return iso(d)};
 const pd=s=>{const [y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d)};
@@ -16,7 +16,7 @@ const maskData=v=>{v=v.replace(/\D/g,'').slice(0,8);
 const maskHora=v=>{v=v.replace(/\D/g,'').slice(0,4); return v.length>2?v.slice(0,2)+':'+v.slice(2):v};
 const maskValor=v=>{v=v.replace(/[^\d,]/g,''); const i=v.indexOf(',');
   let int=i<0?v:v.slice(0,i),dec=i<0?null:v.slice(i+1).replace(/,/g,'').slice(0,2);
-  int=int.replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,'');
+  int=int.replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,'.');
   return dec===null?int:int+','+dec};
 const brIso=s=>{const m=/^(\d{2})\/(\d{2})\/(\d{4})$/.exec(s);if(!m)return'';
   const d=new Date(+m[3],+m[2]-1,+m[1]);
@@ -31,8 +31,8 @@ const pagto=o=>{
   const saldo=Math.max(v-s,0);
   return {saldo,venc:vencSaldo(o.data),txt:s>=v?'Quitado':s>0?'Sinal pago · falta '+brl(saldo):'Sem sinal'};
 };
-const EMO_SMILE='\u{1F60A}' //😊
-const EMO_CUPCAKE='\u{1F9C1}' //🧁
+const EMO_SMILE='\u{1F60A}'; //😊
+const EMO_CUPCAKE='\u{1F9C1}'; //🧁
 
 function atualizarSaldo() {
   const v=valorNum($('#f-valor').value),s=valorNum($('#f-sinal').value),d=brIso($('#f-data').value);
@@ -57,7 +57,7 @@ function dialogo({titulo='',msg='',ok='OK',cancelar='Cancelar',mostrarCancelar=t
     };
     s.onclick=()=>fechar(true);
     n.onclick=()=>fechar(false);
-    d.onclick=e=>{if(e.targer===d)fechar(false)};
+    d.onclick=e=>{if(e.target===d)fechar(false)};
     document.addEventListener('keydown',tecla,true);
     d.classList.add('open');
     setTimeout(()=>(perigo&&mostrarCancelar?n:s).focus(),50);
@@ -90,14 +90,14 @@ function sincSinal() {
 };
 
 /* ==== Modelo do orçamento: edite os textos aqui ==== */
-const NEGOCIO='Leandra Doces Finos';
-const PAGAMENTO='Pagamento via Pix. Chave telefone: (17)99647-8735';
-const VALIDADE_DIAS='7';
-const PCT_SINAL='30' // usado quando o campo "Sinal" estiver vazio
-const DIAS_SALDO='15' // o saldo vence X dias antes do evento
+const NEGOCIO='xxx';
+const PAGAMENTO='xxx';
+const VALIDADE_DIAS=7;
+const PCT_SINAL=30; // usado quando o campo "Sinal" estiver vazio
+const DIAS_SALDO=15; // o saldo vence X dias antes do evento
 
 const vencSaldo=data=>{const d=pd(data);d.setDate(d.getDate()-DIAS_SALDO);return iso(d)};
-const dataExtenso=s=>pd(s).toLocaleString('pt-BR',{weekday:'long',day:'numeric',month:'long',day:'numeric'});
+const dataExtenso=s=>pd(s).toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
 
 function montarMensagem() {
   const nome=$('#f-nome').value.trim().split(' ')[0];
@@ -115,12 +115,12 @@ function montarMensagem() {
     itens.forEach(i=>L.push('• '+(i.q?i.q+' × ':'')+i.d+(i.u&&i.q?' - '+brl(i.q*i.u):'')));
     if(det)L.push('','*Observações:* '+det);
   } else if(det){
-      L.push('','*Itens:*',...det.split('\n').filter(Boolean).map(l=>'• '+1));
+      L.push('','*Itens:*',...det.split('\n').filter(Boolean).map(l=>'• '+l));
   }
   if(valor){
     L.push('','*Valor total:* '+brl(valor),'','*Condições de pagamento:*','• Sinal de '+brl(sinal)+' para reservar a data');
     if(saldo>0)L.push(venc>=iso(new Date())
-      ?'• Saldo de '+brl(saldo)+' até '+isoBr(venc)+' ('+DIAS_SALDO+' dias antes do envento)'
+      ?'• Saldo de '+brl(saldo)+' até '+isoBr(venc)+' ('+DIAS_SALDO+' dias antes do evento)'
       :'• Saldo de '+brl(saldo)+' a combinar');
   }
   L.push('',PAGAMENTO,'Orçamento válido por '+VALIDADE_DIAS+' dias.','Qualquer dúvida, é só chamar! '+EMO_CUPCAKE);
@@ -183,7 +183,7 @@ function abrirCliente(c) {
   $('#c-novo').classList.toggle('hide',!c);
   $('#c-alert').classList.add('hide');
   const P=c?items.filter(o=>o.clienteId===c.id).sort((a,b)=>b.data.localeCompare(a.data)):[];
-  $('#c-hist').innerHTML=P.lenth?'<h2 style="font-size: 17px;">Pedidos</h2>'+P.map(o=>`<div class="rline">
+  $('#c-hist').innerHTML=P.length?'<h2 style="font-size: 17px;">Pedidos</h2>'+P.map(o=>`<div class="rline">
   <span>
     ${esc(o.tipo||'Evento')} · ${dshort(o.data)}
     <span class="meta"> · ${esc(o.status)}</span>
@@ -206,7 +206,7 @@ async function garantirCliente(o) {
 }
 
 const maskCep=v=>{v=v.replace(/\D/g,'').slice(0,8);return v.length>5?v.slice(0,5)+'-'+v.slice(5):v};
-function mostrarEndereco(p){
+function montarEndereco(p){
   const rua=[p.logradouro,p.numero].filter(Boolean).join(', ');
   const cid=[p.cidade,p.uf].filter(Boolean).join('/');
   return [rua,p.bairro,cid,p.cep?'CEP '+p.cep:''].filter(Boolean).join(' - ');
@@ -227,12 +227,12 @@ async function buscarCEP() {
     $('#c-uf').value=d.uf||'';
     msg.textContent='';
     $('#c-num').focus();
-  } catch(e){msg.textContent='Não foi possível buscar  o CEP. Preencha manualmente'}
+  } catch(e){msg.textContent='Não foi possível buscar o CEP. Preencha manualmente.'}
 }
 
 /* ===== Contrato: editar aqui ===== */
-const CONTRATADA={nome:'Leandra Marcia Ferreira',doc:'CNPJ: 15.135.383/0001-82',end:'Rua Atilio Luchesi, 2880 - São Bernardo'};
-const CIDADE='Mirassol/SP';
+const CONTRATADA={nome:'xxx',doc:'xxx',end:'xxx'};
+const CIDADE='xxx';
 const MULTA_PCT=20; // multa em caso de desistência do contratante
 
 const maskCpf=v=>{v=v.replace(/\D/g,'').slice(0,11);
@@ -309,7 +309,7 @@ pre.src=new URL(LOGO,location.href).href;
 
 function numeroWpp() {
   let d=$('#f-tel').value.replace(/\D/g,'');
-  if(d.length>=10&&d.lenth<=11)d='55'+d; // acrescenta o código do Brasil
+  if(d.length>=10&&d.length<=11)d='55'+d; // acrescenta o código do Brasil
   return d;
 }
 
@@ -340,15 +340,15 @@ const hAg=o=>o.entrega||o.hora; // horário que vale para a agenda
 let items=(()=>{try{const r=localStorage.getItem(K);if(r)return JSON.parse(r)}catch(e){}
 return []})();
 //let clientes=[],clienteSel=null,cliEd=null,busca='';
-const KC='doces-clientes',KF='doces-fila',KS='doces-sessao';
+const KC='ajls-clientes',KF='ajls-fila',KS='ajls-sessao';
 const lerLS=(k,pad)=>{try{return JSON.parse(localStorage.getItem(k))||pad}catch(e){return pad}};
 let clientes=lerLS(KC,[]),clienteSel=null,cliEd=null,busca='';
 let fila=lerLS(KF,[]),sincronizando=false;
 const save=()=>{try{localStorage.setItem(K,JSON.stringify(items))}catch(e){}};
 
 /* ===== Supabase ===== */
-const SUPABASE_URL='https://otakntkggjeunpzxwoly.supabase.co';
-const SUPABASE_KEY='sb_publishable_fDlT-_ymboO_TsmEzbtoiw_nF7gEC74';
+const SUPABASE_URL='https://wbcvhfouskcgbrxmejel.supabase.co';
+const SUPABASE_KEY='sb_publishable_LSOvVAeaaMdntMedW52EGg_36dktDz3';
 let sb=null;
 try{sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)}catch(e){console.warn('Supabase indisponível',e)}
 
@@ -359,7 +359,7 @@ const fromRow=r=>({id:r.id,kind:r.kind,nome:r.nome,tel:r.tel||'',tipo:r.tipo||''
 const novoId=()=>crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)});
 const salvarFila=()=>{try{localStorage.setItem(KF,JSON.stringify(fila))}catch(e){}};
 const ehTransitorio=e=>!navigator.onLine||/fetch|network|load failed|timeout|jwt|expired/i.test(String((e&&e.message)||e));
-const pl=n=>n+(n===1?' alteração':'alterações');
+const pl=n=>n+(n===1?' alteração':' alterações');
 
 function enfileirar(op) {
   fila=fila.filter(x=>x.id!==op.id); // só a última operação de cada registro vale
@@ -368,7 +368,7 @@ function enfileirar(op) {
 
 function aplicarFila(L) {
   fila.forEach(op=>{
-    if(op.tipo==='excluir')L=L.filter('x=>x.id!==op.id');
+    if(op.tipo==='excluir')L=L.filter(x=>x.id!==op.id);
     else if(L.some(x=>x.id===op.id))L=L.map(x=>x.id===op.id?op.dado:x);
     else L=[...L,op.dado];
   });
@@ -407,7 +407,7 @@ function barra() {
   const b=$('#status');if(!b)return;
   const n=fila.length,e=fila.filter(x=>x.erro).length;
   let t='';
-  if(e)t=pl(e)+' como erro. <button class="btn small" id="b-fila">Ver</button>';
+  if(e)t=pl(e)+' com erro. <button class="btn small" id="b-fila">Ver</button>';
   else if(!navigator.onLine)t='Sem internet'+(n?' · '+pl(n)+' para enviar':' · mostrando os últimos dados salvos');
   else if(n)t=sincronizando?'Enviando '+pl(n)+'...':pl(n)+' aguardando envio';
   if(!t){b.classList.add('hide');return}
@@ -555,7 +555,7 @@ function viewPedidos(){
   <div class="chips">${F.map(f=>`<button class="chip${f===filter?' on':''}" data-f="${f}">${f}</button>`).join('')}</div>
   ${L.length?L.map(card).join(''):'<div class="empty">Nenhum pedido nesta situação.</div>'}
   <h2>Backup</h2>
-  <p class="sub">Salve uma copia dos seus dados ou restaure de um arquivo.<br>${(()=>{try{const t=localStorage.getItem(KB);return t?'Último backup neste aparelho: '+new Date(t).toLocaleDateString('pt-BR'):'Nenhum backup feito neste aparelho ainda.'}catch(e){return ''}})()}</p>
+  <p class="sub">Salve uma cópia dos seus dados ou restaure de um arquivo.<br>${(()=>{try{const t=localStorage.getItem(KB);return t?'Último backup neste aparelho: '+new Date(t).toLocaleDateString('pt-BR'):'Nenhum backup feito neste aparelho ainda.'}catch(e){return ''}})()}</p>
   <div class="acts"><button class="btn" id="b-exp">Exportar</button><button class="btn" id="b-imp">Importar</button><button class="btn" id="b-sair">Sair da conta</button></div>`;
 }
 
@@ -599,14 +599,14 @@ function viewRelatorio(){
   <div class="kpi"><span>Já recebido</span><b>${R(rec)}</b></div>
   <div class="kpi"><span>Falta receber</span><b>${R(fat-rec)}</b></div>
   <div class="kpi"><span>Ticket médio</span><b>${R(conf.length?fat/conf.length:0)}</b></div>
-  <div class="kpi"><span>Orçamentos em aberto ${aberto.length}</span><b>${R(soma(aberto,o=>+o.valor||0))}</b></div>
+  <div class="kpi"><span>Orçamentos em aberto (${aberto.length})</span><b>${R(soma(aberto,o=>+o.valor||0))}</b></div>
 </div>
 ${tipos.length?`<h2>Por tipo de evento</h2><div class="item" style="cursor: default;">${tipos.map(([t,d])=>`<div class="rline"><span>${esc(t)} <span class="meta">· ${d.n}</span></span><b>${R(d.v)}</b></div>`).join('')}</div>`:''}
 <h2>Saldos a receber</h2>
   ${receber.length?`<div class="item" style="cursor:default"><div class="meta">Total pendente: <b>${R(soma(receber,o=>pagto(o).saldo))}</b></div>${receber.map(linhaReceber).join('')}</div>`:'<div class="empty">Nenhum saldo pendente.</div>'}`;
 }
 
-const KB='doces-ultimo-backup';
+const KB='ajls-ultimo-backup';
 function exportar(){
   const dados={
     app:'agenda-de-doces',versao:2,exportadoEm:new Date().toISOString(),
@@ -617,7 +617,7 @@ function exportar(){
   const blob=new Blob([JSON.stringify(dados,null,2)],{type:'application/json'});
   const a=document.createElement('a');
   a.href=URL.createObjectURL(blob);
-  a.download='doces-backup-'+iso(new Date())+'json';
+  a.download='doces-backup-'+iso(new Date())+'.json';
   document.body.appendChild(a);a.click();a.remove();
   setTimeout(()=>URL.revokeObjectURL(a.href),1000);
   try{localStorage.setItem(KB,new Date().toISOString())}catch(e){}
@@ -666,7 +666,7 @@ function importar(file){
         if(error)throw error;
       }
       await carregar();
-      aviso(novos.length+' pedidos e '+cliIns.length+' clientes importados.'+(d.itens.length>novos.length?'/n'+(d.itens.length-novos.length)+' pedidos já existiam ou eram inválidos.':''));
+      aviso(novos.length+' pedidos e '+cliIns.length+' clientes importados.'+(d.itens.length>novos.length?'\n'+(d.itens.length-novos.length)+' pedidos já existiam ou eram inválidos.':''));
     }catch(e){aviso('Não foi possível importar: '+(e.message==='formato'?'arquivo inválido.':e.message))}
   };
   r.readAsText(file);
@@ -827,7 +827,7 @@ $('#l-entrar').onclick=async()=>{
   if(!sb)return;
   const {error}=await sb.auth.signInWithPassword({email:$('#l-email').value.trim(),password:$('#l-senha').value});
   if(error){mostrarLogin('e-Mail ou senha incorretos.');return}
-  try{localStorage.setItems(KS,'1')}catch(e){}
+  try{localStorage.setItem(KS,'1')}catch(e){}
   $('#l-senha').value='';$('#login').classList.remove('open');
   try{await carregar()}catch(e){aviso('Não foi possível carregar os dados: '+(e.message||e))}
 };
@@ -865,7 +865,7 @@ document.addEventListener('click',async e=>{
 $('#f-cpf').addEventListener('input',e=>{e.target.value=maskCpf(e.target.value)});
 $('#b-pdf').onclick=gerarContrato;
 /* tema claro / escuro */
-const KT='doces-tema';
+const KT='ajls-tema';
 const temaAtual=()=>document.documentElement.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
 function iconeTema() {
   const t=temaAtual(),b=$('#b-tema');
@@ -923,7 +923,7 @@ $('#c-save').onclick=async()=>{
   const p={cep:$('#c-cep').value.trim(),logradouro:$('#c-log').value.trim(),numero:$('#c-num').value.trim(),bairro:$('#c-bairro').value.trim(),cidade:$('#c-cid').value.trim(),uf:$('#c-uf').value.trim().toUpperCase()};
   const row={nome,tel:$('#c-tel').value.trim()||null,cpf:$('#c-cpf').value.trim()||null,cep:p.cep||null,logradouro:p.logradouro||null,numero:p.numero||null,bairro:p.bairro||null,cidade:p.cidade||null,uf:p.uf||null,endereco:montarEndereco(p)||null,obs:$('#c-obs').value.trim()||null};
   //const row={nome,tel:$('#c-tel').value.trim()||null,cpf:$('#c-cpf').value.trim()||null,endereco:$('#c-end').value.trim()||null,obs:$('#c-obs').value.trim()||null};
-  const btn=$('#c-save');btn.disable=true;
+  const btn=$('#c-save');btn.disabled=true;
   try{
     const q=cliEd?sb.from('clientes').update(row).eq('id',cliEd.id):sb.from('clientes').insert(row);
     const {data,error}=await q.select().single();
@@ -931,7 +931,7 @@ $('#c-save').onclick=async()=>{
     clientes=cliEd?clientes.map(x=>x.id===data.id?data:x):[...clientes,data];
     atualizarLista();fecharCliente();render();
   } catch(err){al.textContent='Erro ao salvar: '+(err.message||err);al.classList.remove('hide')}
-    finally{btn.disable=false}
+    finally{btn.disabled=false}
 };
 $('#c-del').onclick=async()=>{
   if(!navigator.onLine){aviso('Para alterar clientes é preciso estar com internet.');return}
@@ -941,7 +941,7 @@ $('#c-del').onclick=async()=>{
   if(error){aviso('Não foi possível excluir: '+error.message);return}
   const id=cliEd.id;
   clientes=clientes.filter(x=>x.id!==id);
-  items=items.map(o=>o.clientId===id?{...o,clientId:null}:o);
+  items=items.map(o=>o.clienteId===id?{...o,clienteId:null}:o);
   atualizarLista();fecharCliente();render();
 };
 $('#c-novo').onclick=()=>{
@@ -966,7 +966,7 @@ document.addEventListener('click',async e=>{
   //if(confirm(msg+'\n\nTentar enviar de novo? (OK = tentar, Cancelar = ver outras opções)')){
     fila.forEach(x=>{delete x.erro});salvarFila();sincronizar();return;
   }
-  if(await confirmar('Elas não serão envaidas',{titulo:'Descartar alterações?',ok:'Descartar',perigo:true})){
+  if(await confirmar('Elas não serão enviadas.',{titulo:'Descartar alterações?',ok:'Descartar',perigo:true})){
   //if(confirm('Descartar essas alterações? Elas não serão enviadas.')){
     fila=fila.filter(x=>!x.erro);salvarFila();barra();carregar().catch(()=>{});
   }
@@ -975,7 +975,7 @@ $('#c-cep').addEventListener('input',e=>{e.target.value=maskCep(e.target.value);
 $('#c-uf').addEventListener('input',e=>{e.target.value=e.target.value.replace(/[^a-zA-Z]/g,'').toUpperCase().slice(0,2)});
 
 /* mostrar / ocultar senha */
-const OLHO_ON='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-with="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const OLHO_ON='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
 const OLHO_OFF='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/></svg>';
 function mostrarSenha(ver) {
   $('#l-senha').type=ver?'text':'password';

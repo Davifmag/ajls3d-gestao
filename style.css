@@ -1,19 +1,19 @@
 :root {
-    --bg:#FBF6F8;
-    --card:#fff;
-    --ink:#2E1A2B;
-    --mute:#7C6878;
-    --line:#EADDE4;
-    --berry:#A5265E;
-    --berry-ink:#fff;
-    --pist:#4F7F55;
-    --pist-bg:#E3F0DF;
-    --car:#9A6420;
-    --car-bg:#F8E8CF;
-    --plum-bg:#EFE3F2;
-    --plum:#6A3B7A;
-    --red:#C4302B;
-    --grey-bg:#ECE8EA;
+    --bg:#F6F4EF;
+    --card:#FFFFFF;
+    --ink:#151517;
+    --mute:#6B6A66;
+    --line:#E3DFD5;
+    --berry:#8C6536;
+    --berry-ink:#FFFFFF;
+    --pist:#3E7A4F;
+    --pist-bg:#E1EFE4;
+    --car:#8C6536;
+    --car-bg:#F5EAD3;
+    --plum-bg:#E8EAEE;
+    --plum:#4A5568;
+    --red:#B4302B;
+    --grey-bg:#ECEAE4;
     box-sizing:border-box;
     padding-top:env(safe-area-inset-top,0px);
     padding-bottom:env(safe-area-inset-bottom,0px)
@@ -21,40 +21,40 @@
 
 @media (prefers-color-scheme:dark) {
     :root:not([data-theme="light"]) {
-        --bg:#1D1219;
-        --card:#2A1B26;
-        --ink:#F7ECF2;
-        --mute:#B7A0B0;
-        --line:#40303B;
-        --berry:#E0709F;
-        --berry-ink:#2E1A2B;
-        --pist:#9CCB9F;
-        --pist-bg:#243A29;
-        --car:#E8B76A;
-        --car-bg:#42301A;
-        --plum-bg:#38243F;
-        --plum:#D5A8E3;
+        --bg:#0B0B0C;
+        --card:#161618;
+        --ink:#F3F1EC;
+        --mute:#A6A39B;
+        --line:#2B2A27;
+        --berry:#C7A367;
+        --berry-ink:#0B0B0C;
+        --pist:#3E7A4F;
+        --pist-bg:#1F3326;
+        --car:#E8C77E;
+        --car-bg:#3A2E16;
+        --plum-bg:#2A2B2E;
+        --plum:#CCCAC7;
         --red:#FF8A83;
-        --grey-bg:#3A2E35
+        --grey-bg:#232325;
     }
 }
 
 :root[data-theme="dark"] {
-    --bg:#1D1219;
-    --card:#2A1B26;
-    --ink:#F7ECF2;
-    --mute:#B7A0B0;
-    --line:#40303B;
-    --berry:#E0709F;
-    --berry-ink:#2E1A2B;
-    --pist:#9CCB9F;
-    --pist-bg:#243A29;
-    --car:#E8B76A;
-    --car-bg:#42301A;
-    --plum-bg:#38243F;
-    --plum:#D5A8E3;
+    --bg:#0B0B0C;
+    --card:#161618;
+    --ink:#F3F1EC;
+    --mute:#A6A39B;
+    --line:#2B2A27;
+    --berry:#C7A367;
+    --berry-ink:#0B0B0C;
+    --pist:#3E7A4F;
+    --pist-bg:#1F3326;
+    --car:#E8C77E;
+    --car-bg:#3A2E16;
+    --plum-bg:#2A2B2E;
+    --plum:#CCCAC7;
     --red:#FF8A83;
-    --grey-bg:#3A2E35
+    --grey-bg:#232325;
 }
 
 html {
