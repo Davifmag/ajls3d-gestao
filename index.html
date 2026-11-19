@@ -88,23 +88,48 @@
       <label for="f-endcli">Endereço do contratante</label>
       <input id="f-endcli" autocomplete="off">
     </div>
+    <div class="orc row">
+      <div>
+        <label for="f-tipo">Tipo de Serviço</label>
+        <select id="f-tipo">
+          <option>Peça personalizada</option>
+          <option>Protótipo</option>
+          <option>Miniatura / Colecionável</option>
+          <option>Decoração / Brinde</option>
+          <option>Reposição de peça</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div>
+        <label for="f-cor">Cor</label>
+        <input id="f-cor" autocomplete="off">
+      </div>
+    </div>
     <div class="orc">
-      <label for="f-tipo">Tipo de evento</label>
-      <select id="f-tipo">
-        <option>Casamento</option>
-        <option>15 anos</option>
-        <option>Aniversário</option>
-        <option>Corporativo</option>
-        <option>Outro</option>
-      </select>
+      <label for="f-dim">Dimensões</label>
+      <input id="f-dim" placeholder="Ex: 120 x 80 x 60 mm" autocomplete="off">
+    </div>
+    <div class="orc row">
+      <div>
+        <label for="f-peso">Peso (g)</label>
+        <input id="f-peso" inputmode="decimal" autocomplete="off">
+      </div>
+      <div>
+        <label for="f-tempo">Tempo de impressão (h)</label>
+        <input id="f-tempo" inputmode="decimal" autocomplete="off">
+      </div>
+    </div>
+    <div class="orc">
+      <label for="f-modelo">Link do modelo (STL)</label>
+      <input type="url" id="f-modelo" inputmode="url" placeholder="https://..." autocomplete="off">
     </div>
     <div class="row">
       <div>
-        <label for="f-data">Data</label>
+        <label for="f-data">Prazo de entrega</label>
         <input id="f-data" type="text" inputmode="numeric" placeholder="dd/mm/aaaa" maxlength="10" autocomplete="off">
       </div>
       <div>
-        <label for="f-hora">Horário</label>
+        <label for="f-hora">Horário (opcional)</label>
         <input id="f-hora" type="text" inputmode="numeric" placeholder="hh:mm" maxlength="5" autocomplete="off">
       </div>
     </div>
@@ -115,16 +140,25 @@
     </div>
     <div class="orc row">
       <div>
-        <label for="f-conv">Convidados</label>
-        <input id="f-conv" type="number" min="0" inputmode="numeric">
+        <label for="f-material">Material</label>
+        <select id="f-material">
+          <option>PLA</option>
+          <option>PETG</option>
+          <option>ABS</option>
+          <option>ASA</option>
+          <option>TPU (flexível)</option>
+          <option>Resina</option>
+          <option>Outro</option>
+        </select>
       </div>
-      <div>
-        <label for="f-valor">Valor(R$)</label>
-        <input id="f-valor" type="text" inputmode="decimal" placeholder="0,00" autocomplete="off">
-      </div>
-    </div>  
+    </div>
+    <div class="orc">
+      <label for="f-valor">Valor total (R$)</label>
+      <input type="text" id="f-valor" inputmode="decimal" placeholder="0,00" autocomplete="off">
+    </div>
+    <input type="hidden" id="f-conv">
     <div class="orc"><label for="f-local">Local e endereço da entrega</label><input id="f-local" autocomplete="off"></div>
-    <div class="orc"><label for="f-entrega">Horário de entrega</label><input id="f-entrega" type="text" inputmode="numeric" placeholder="hh:mm" maxlength="5" autocomplete="off"></div>
+    <input id="f-entrega" type="hidden">
     <!--<div class="orc">
       <label for="f-sinal">Sinal pago (R$)</label>
       <div style="display: flex; gap: 8px;">
@@ -150,6 +184,16 @@
         <option>Orçado</option>
         <option>Confirmado</option>
         <option>Recusado</option>
+      </select>
+    </div>
+    <div class="orc" id="bloco-prod">
+      <label for="f-prod">Etapa de produção</label>
+      <select id="f-prod">
+        <option>Na fila</option>
+        <option>Imprimindo</option>
+        <option>Acabamento</option>
+        <option>Pronto</option>
+        <option>Entregue</option>
       </select>
     </div>
     <label for="f-desc">Detalhes</label>

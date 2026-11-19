@@ -90,11 +90,11 @@ function sincSinal() {
 };
 
 /* ==== Modelo do orçamento: edite os textos aqui ==== */
-const NEGOCIO='xxx';
-const PAGAMENTO='xxx';
+const NEGOCIO='AJLS 3D';
+const PAGAMENTO='Pagamento via Pix. Chave: (SUA_CHAVE)';
 const VALIDADE_DIAS=7;
-const PCT_SINAL=30; // usado quando o campo "Sinal" estiver vazio
-const DIAS_SALDO=15; // o saldo vence X dias antes do evento
+const PCT_SINAL=50; // usado quando o campo "Sinal" estiver vazio
+const DIAS_SALDO=0; // o saldo vence X dias antes do evento
 
 const vencSaldo=data=>{const d=pd(data);d.setDate(d.getDate()-DIAS_SALDO);return iso(d)};
 const dataExtenso=s=>pd(s).toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -352,8 +352,8 @@ const SUPABASE_KEY='sb_publishable_LSOvVAeaaMdntMedW52EGg_36dktDz3';
 let sb=null;
 try{sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY)}catch(e){console.warn('Supabase indisponível',e)}
 
-const toRow=o=>({kind:o.kind,nome:o.nome,tel:o.tel||null,tipo:o.tipo||null,data:o.data,hora:o.hora||'',entrega:o.entrega||'',conv:parseInt(o.conv)||null,valor:+o.valor||0,sinal:+o.sinal||0,sinal_pct:o.sinalPct||null,status:o.kind==='comp'?null:(o.status||null),local_entrega:o.local||'',descr:o.desc||'',cpf:o.cpf||null,endereco:o.endereco||null,cliente_id:o.clienteId||null,itens:o.itens||[]});
-const fromRow=r=>({id:r.id,kind:r.kind,nome:r.nome,tel:r.tel||'',tipo:r.tipo||'',data:r.data,hora:r.hora||'',entrega:r.entrega||'',conv:r.conv||'',valor:+r.valor||0,sinal:+r.sinal||0,sinalPct:r.sinal_pct==null?null:+r.sinal_pct,status:r.status||'',local:r.local_entrega||'',desc:r.descr||'',cpf:r.cpf||'',endereco:r.endereco||'',clienteId:r.cliente_id||null,itens:r.itens||[]});
+const toRow=o=>({kind:o.kind,nome:o.nome,tel:o.tel||null,tipo:o.tipo||null,data:o.data,hora:o.hora||'',entrega:o.entrega||'',conv:parseInt(o.conv)||null,valor:+o.valor||0,sinal:+o.sinal||0,sinal_pct:o.sinalPct||null,status:o.kind==='comp'?null:(o.status||null),local_entrega:o.local||'',descr:o.desc||'',cpf:o.cpf||null,endereco:o.endereco||null,cliente_id:o.clienteId||null,itens:o.itens||[],material:o.material||null,cor:o.cor||null,dimensoes:o.dimensoes||null,peso_g:o.pesoG||null,tempo_h:o.tempoH||null,modelo_url:o.modeloUrl||null,producao:o.producao||null});
+const fromRow=r=>({id:r.id,kind:r.kind,nome:r.nome,tel:r.tel||'',tipo:r.tipo||'',data:r.data,hora:r.hora||'',entrega:r.entrega||'',conv:r.conv||'',valor:+r.valor||0,sinal:+r.sinal||0,sinalPct:r.sinal_pct==null?null:+r.sinal_pct,status:r.status||'',local:r.local_entrega||'',desc:r.descr||'',cpf:r.cpf||'',endereco:r.endereco||'',clienteId:r.cliente_id||null,itens:r.itens||[],material:r.material||'',cor:r.cor||'',dimensoes:r.dimensoes||'',pesoG:r.peso_g==null?'':+r.peso_g,tempoH:r.tempo_h==null?'':+r.tempo_h,modeloUrl:r.modelo_url||'',producao:r.producao||''});
 
 /* ===== Fila offline ===== */
 const novoId=()=>crypto.randomUUID?crypto.randomUUID():'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=Math.random()*16|0;return(c==='x'?r:(r&3|8)).toString(16)});
@@ -500,19 +500,25 @@ const sobrepoe=(a,b)=>{
   if(x===null||y===null)return true; //sem horário: considera o dia inteiro
   return Math.abs(x-y)<MARGEM_MIN;
 };
-const clashes=o=>o.status==='Recusado'?[]:items.filter(x=>x.id!==o.id&&x.data===o.data&&busy(x)&&sobrepoe(o,x));
+const MAX_POR_DIA =3;
+const clashes=o=>{
+  if (!MAX_POR_DIA||o.kind!=='orc'||o.status==='Recusado'||o.producao==='Entregue')return[];
+  const outros=items.filter(x=>x.id!==o.id&&x.kind==='orc'&&x.data===o.data&&x.status==='Confirmado'&&x.producao!=='Entregue');
+  return outros.length>=MAX_POR_DIA?outros:[];
+};
 const byDay=d=>items.filter(x=>x.data===d).sort((a,b)=>(a.hora||'').localeCompare(b.hora||''));
 
 function card(o){
   const p=o.kind==='orc'&&o.status!=='Recusado'?pagto(o):null;
   const c=clashes(o).length,st=o.kind==='comp'?'Compromisso':o.status;
   return `<button class="item" data-id="${o.id}"><div class="top"><div><b>${esc(o.nome)}</b>
-  <div class="meta">${o.kind==='orc'?esc(o.tipo)+' · ':''}${dshort(o.data)}${o.hora?' às '+o.hora:''}${o.valor?' · '+brl(o.valor):''}</div></div>
+  <div class="meta">${o.kind==='orc'?esc(o.tipo)+' · entrega ':''}${dshort(o.data)}${o.hora?' às '+o.hora:''}${o.valor?' · '+brl(o.valor):''}</div></div>
   <span class="badge s-${st}">${st}</span></div>
   ${p?'<div class="meta">'+p.txt+(o.status==='Confirmado'&&p.saldo>0?' · saldo até '+dshort(p.venc):'')+'</div>':''}
   ${o.status==='Confirmado'&&p&&p.saldo>0&&p.venc<iso(now)?'<div class="warn">Saldo a cobrar: o prazo já chegou</div>':''}
+  ${o.status==='Confirmado'&&o.producao?'<div class="meta">Produção: '+esc(o.producao)+(o.tempoH?' · '+String(o.tempoH).replace('.', ',')+' h':'')+'</div>':''}
   ${fila.some(x=>x.id===o.id)?'<div class="meta">Aguardando envio</div>':''}
-  ${c?'<div class="warn">Atenção: há outro compromisso nesta data</div>':''}</button>`;
+  ${c?'<div class="warn">Atenção: limite de entregas neste dia</div>':''}</button>`;
 }
 
 function render(){
@@ -522,9 +528,9 @@ function render(){
 
 function viewAgenda(){
   const today=iso(now);
-  const nx=items.filter(o=>o.kind==='orc'&&o.status==='Confirmado'&&o.data>=today).sort((a,b)=>a.data.localeCompare(b.data))[0];
-  let nxt='<div class="next"><b>Nenhum evento confirmado</b><span>Quando confirmar um pedido, ele aparece aqui.</span></div>';
-  if(nx){const n=Math.round((pd(nx.data)-pd(today))/864e5);nxt=`<div class="next"><b>${esc(nx.nome)}</b><span>${esc(nx.tipo)} · ${n===0?'hoje':n===1?'amanhã':'em '+n+' dias'}</span></div>`}
+  const nx=items.filter(o=>o.kind==='orc'&&o.producao!=='Entregue'&&o.data>=today).sort((a,b)=>a.data.localeCompare(b.data))[0];
+  let nxt='<div class="next"><b>Nenhuma entrega confirmada</b><span>Quando confirmar um pedido, ele aparece aqui.</span></div>';
+  if(nx){const n=Math.round((pd(nx.data)-pd(today))/864e5);nxt=`<div class="next"><b>${esc(nx.nome)}</b><span>${esc(nx.tipo)} · entrega ${n===0?'hoje':n===1?'amanhã':'em '+n+' dias'}</span></div>`}
   const first=new Date(vy,vm,1),last=new Date(vy,vm+1,0).getDate();
   const mname=first.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
   let g=['D','S','T','Q','Q','S','S'].map(w=>`<div class="wd">${w}</div>`).join('');
@@ -538,17 +544,17 @@ function viewAgenda(){
   const lim=plus(7);
   const cobrar=items.filter(o=>o.kind==='orc'&&o.status==='Confirmado'&&o.data>=today&&pagto(o)&&pagto(o).saldo>0&&pagto(o).venc<=lim).sort((a,b)=>a.data.localeCompare(b.data));
   const cob=cobrar.length?`<div class="item" style="cursor:default"><b>Saldos para cobrar</b>${cobrar.map(o=>`<div class="meta">${esc(o.nome)} · ${brl(pagto(o).saldo)} · até ${dshort(pagto(o).venc)}</div>`).join('')}</div>`:'';
-  return `<h1>Agenda AJLS 3D</h1><p class="sub">Seus pedidos e compromissos num só lugar</p>${nxt}${cob}
+  return `<h1>AJLS 3D</h1><p class="sub">Pedidos, produção e entrega num só lugar</p>${nxt}${cob}
   <div class="cal"><div class="cal-h"><button class="nav" data-m="-1" aria-label="Mês anterior">‹</button><strong>${mname}</strong><button class="nav" data-m="1" aria-label="Próximo mês">›</button></div>
   <div class="grid">${g}</div>
-  <div class="legend"><span><i style="background:var(--pist)"></i>Confirmado</span><span><i style="background:var(--car)"></i>Em aberto</span><span><i style="background:var(--plum)"></i>Compromisso</span><span><i style="box-shadow:0 0 0 2px var(--red)"></i>Conflito</span></div></div>
+  <div class="legend"><span><i style="background:var(--pist)"></i>Confirmado</span><span><i style="background:var(--car)"></i>Em aberto</span><span><i style="background:var(--plum)"></i>Compromisso</span><span><i style="box-shadow:0 0 0 2px var(--red)"></i>Dia cheio</span></div></div>
   <h2>${dlong(sel)}</h2>
   ${L.length?L.map(card).join(''):'<div class="empty">Dia livre. Toque em + para adicionar um pedido ou compromisso.</div>'}`;
 }
 
 function viewPedidos(){
-  const F=['Todos','Novo','Orçado','Confirmado','Recusado'];
-  const L=items.filter(o=>o.kind==='orc'&&(filter==='Todos'||o.status===filter)).sort((a,b)=>a.data.localeCompare(b.data));
+  const F=['Todos','Novo','Orçado','Confirmado','Na fila', 'Imprimindo', 'Acabamento', 'Pronto', 'Entregue', 'Recusado'];
+  const L=items.filter(o=>o.kind==='orc'&&(filter==='Todos'||o.status===filter||o.status==='Confirmado'&&o.producao===filter)).sort((a,b)=>a.data.localeCompare(b.data));
   const open=items.filter(o=>o.kind==='orc'&&(o.status==='Novo'||o.status==='Orçado')).length;
   const areceber=items.filter(o=>o.kind==='orc'&&o.status==='Confirmado').reduce((t,o)=>t+(pagto(o)?pagto(o).saldo:0),0);
   return `<h1>Pedidos</h1><p class="sub">${open?open+' aguardando resposta':'Nenhum orçamento em aberto'}${areceber?' · A receber: '+brl(areceber):''}</p>
@@ -570,7 +576,7 @@ function viewRelatorio(){
   const orc=items.filter(o=>o.kind==='orc');
   const doMes=orc.filter(o=>o.data.slice(0,7)===mk);
   const conf=doMes.filter(o=>o.status==='Confirmado');
-  const fat=soma(conf,o=>+o.valor||0);
+  const fat=soma(conf,o=>+o.valor||0),horas=soma(conf,o=>+o.tempoH||0),gramas=soma(conf,o=>+o.pesoG||0);
   const rec=soma(conf,o=>Math.min(+o.sinal||0,+o.valor||0));
   const aberto=doMes.filter(o=>o.status==='Novo'||o.status==='Orçado');
   const porTipo={};
@@ -587,7 +593,7 @@ function viewRelatorio(){
   };
 
   return `<h1>Relatório</h1>
-<p class="sub">Por data do evento, só pedidos confirmados</p>
+<p class="sub">Por prazo de entrega, só pedidos confirmados</p>
 <div class="cal-h" style="margin-bottom: 10px;">
   <button class="nav" data-rm="-1" aria-label="Mês anterior">‹</button>
   <strong style="font: 600 18px Fraunces, Georgia, serif;text-transform: capitalize;">${mname}</strong>
@@ -595,13 +601,15 @@ function viewRelatorio(){
 </div>
 <div class="kpis">
   <div class="kpi"><span>Faturamento</span><b>${R(fat)}</b></div>
-  <div class="kpi"><span>Eventos confirmados</span><b>${conf.length}</b></div>
+  <div class="kpi"><span>Pedidos confirmados</span><b>${conf.length}</b></div>
   <div class="kpi"><span>Já recebido</span><b>${R(rec)}</b></div>
   <div class="kpi"><span>Falta receber</span><b>${R(fat-rec)}</b></div>
   <div class="kpi"><span>Ticket médio</span><b>${R(conf.length?fat/conf.length:0)}</b></div>
   <div class="kpi"><span>Orçamentos em aberto (${aberto.length})</span><b>${R(soma(aberto,o=>+o.valor||0))}</b></div>
+  <div class="kpi"><span>Horas de impressão</span><b>${String(Math.round(horas*10)/10).replace('.', ',')} h</b></div>
+  <div class="kpi"><span>Material usado</span><b>${gramas>=1000?(Math.round(gramas/10)/100+' kg').replace('.', ','):Math.round(gramas)+' g'}</b></div>
 </div>
-${tipos.length?`<h2>Por tipo de evento</h2><div class="item" style="cursor: default;">${tipos.map(([t,d])=>`<div class="rline"><span>${esc(t)} <span class="meta">· ${d.n}</span></span><b>${R(d.v)}</b></div>`).join('')}</div>`:''}
+${tipos.length?`<h2>Por tipo de serviço</h2><div class="item" style="cursor: default;">${tipos.map(([t,d])=>`<div class="rline"><span>${esc(t)} <span class="meta">· ${d.n}</span></span><b>${R(d.v)}</b></div>`).join('')}</div>`:''}
 <h2>Saldos a receber</h2>
   ${receber.length?`<div class="item" style="cursor:default"><div class="meta">Total pendente: <b>${R(soma(receber,o=>pagto(o).saldo))}</b></div>${receber.map(linhaReceber).join('')}</div>`:'<div class="empty">Nenhum saldo pendente.</div>'}`;
 }
@@ -693,20 +701,25 @@ function importar(file){
 /* formulário */
 function setKind(k){kind=k;document.querySelectorAll('#seg button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
   document.querySelectorAll('.orc').forEach(e=>e.classList.toggle('hide',k==='comp'));
-  $('#l-nome').textContent=k==='orc'?'Cliente':'Compromisso';check()}
+  $('#l-nome').textContent=k==='orc'?'Cliente':'Compromisso';mostrarProd();check()}
+
+function mostrarProd(){
+  const b=$('#bloco-prod');
+  if(b)b.classList.toggle('hide',kind==='comp'||$('#f-status').value!=='Confirmado')
+}
 
 function draft(){return {id:editing?editing.id:-1,kind,data:brIso($('#f-data').value),hora:$('#f-hora').value,entrega:kind==='orc'?$('#f-entrega').value:'',status:kind==='orc'?$('#f-status').value:'Compromisso'}
 }
 
 function check(){const d=draft(),a=$('#alert');
   const c=d.data?clashes(d):[];
-  if(c.length){a.innerHTML='<b>Data já ocupada:</b> '+c.map(x=>esc(x.nome)+(x.hora?' ('+x.hora+')':'')).join(', ')+'. Você ainda pode salvar.';a.classList.remove('hide')}else a.classList.add('hide')
+  if(c.length){a.innerHTML='<b>Dia cheio:</b> já há '+c.length+' entregas confirmadas: '+c.map(x=>esc(x.nome)+(x.hora?' ('+x.hora+')':'')).join(', ')+'. Você ainda pode salvar.';a.classList.remove('hide')}else a.classList.add('hide')
 }
 
 function openSheet(o){
   editing=o||null;clienteSel=o?o.clienteId||null:null;$('#sh-t').textContent=o?'Editar':'Novo registro';
   setKind(o?o.kind:'orc');
-  $('#f-nome').value=o?o.nome:'';$('#f-tel').value=maskTel(o?o.tel||'':'');$('#f-tipo').value=o&&o.tipo?o.tipo:'Casamento';
+  $('#f-nome').value=o?o.nome:'';$('#f-tel').value=maskTel(o?o.tel||'':'');$('#f-tipo').value=o&&o.tipo?o.tipo:'Peça personalizada';
   $('#f-data').value=isoBr(o?o.data:sel);$('#f-hora').value=o?o.hora||'':'';$('#f-conv').value=o&&o.conv||'';
   $('#f-valor').value=o&&o.valor?numValor(o.valor):'';$('#f-status').value=o&&o.status||'Novo';$('#f-desc').value=o?o.desc||'':'';
   $('#b-del').classList.toggle('hide',!o);$('#itens').innerHTML='';(o&&o.itens||[]).forEach(addItem);recalc();
@@ -714,7 +727,14 @@ function openSheet(o){
   $('#f-sinal').value=o&&o.sinal?numValor(o.sinal):'';
   $('#f-pct').value=o&&o.sinalPct?fmtPct(o.sinalPct):'';
   $('#f-cpf').value=o?o.cpf||'':'';$('#f-endcli').value=o?o.endereco||'':'';
-  sincSinal();check();$('#ov').classList.add('open');setTimeout(()=>$('#f-nome').focus(),50);
+  $('#f-material').value=o&&o.material?o.material:'PLA';
+  $('#f-cor').value=o?o.cor||'':'';
+  $('#f-dim').value=o?o.dimensoes||'':'';
+  $('#f-peso').value=o&&o.pesoG?String(o.pesoG).replace('.', ','):'';
+  $('#f-tempo').value=o&&o.tempoH?String(o.tempoH).replace('.', ','):'';
+  $('#f-modelo').value=o?o.modeloUrl||'':'';
+  $('#f-prod').value=o&&o.producao?o.producao:'Na fila';
+  sincSinal();mostrarProd();check();$('#ov').classList.add('open');setTimeout(()=>$('#f-nome').focus(),50);
 }
 const closeSheet=()=>$('#ov').classList.remove('open');
 
@@ -724,6 +744,7 @@ $('#ov').onclick=e=>{if(e.target.id==='ov')closeSheet()};
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
 $('#seg').onclick=e=>{if(e.target.dataset.k)setKind(e.target.dataset.k)};
 ['f-data','f-status'].forEach(i=>$('#'+i).addEventListener('change',check));
+$('#f-status').addEventListener('change', mostrarProd);
 $('#t-agenda').onclick=()=>{tab='agenda';render()};
 $('#t-pedidos').onclick=()=>{tab='pedidos';render()};
 $('#b-save').onclick=()=>{
