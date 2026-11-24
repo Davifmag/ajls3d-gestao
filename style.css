@@ -34,7 +34,7 @@
         --car-bg:#3A2E16;
         --plum-bg:#2A2B2E;
         --plum:#CCCAC7;
-        --red:#FF8A83;
+        --red:#f7ff8e;
         --grey-bg:#232325;
     }
 }
@@ -404,13 +404,13 @@ h2::first-letter {
     font-size:30px;
     line-height:1;
     margin-top:-26px;
-    box-shadow:0 6px 16px rgba(165,38,94,.35)
+    box-shadow:0 6px 16px rgb(0, 0, 0)
 }
 
 .ov {
     position:fixed;
     inset:0;
-    background:rgba(20,8,16,.5);
+    background:rgba(0, 0, 0, 0.616);
     display:none;
     align-items:flex-end;
     justify-content:center;
@@ -643,7 +643,7 @@ input[type=search] {
 }
 
 .btn.perigo {
-    background: var(--red);
+    background: var(--berry);
     color: var(--bg);
     border-color: var(--red);
 }
@@ -674,4 +674,20 @@ input[type=search] {
 
 .olho[aria-pressed="true"] {
     color: var(--berry);
+}
+
+.logo-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 24px;
+}
+
+.logo-img {
+    max-width: 200px;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    mix-blend-mode: screen;
 }

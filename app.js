@@ -101,30 +101,30 @@ const dataExtenso=s=>pd(s).toLocaleDateString('pt-BR',{weekday:'long',day:'numer
 
 function montarMensagem() {
   const nome=$('#f-nome').value.trim().split(' ')[0];
-  const data=brIso($('#f-data').value),hora=$('#f-hora').value;
+  const data=brIso($('#f-data').value);
   const itens=lerItens(),valor=valorNum($('#f-valor').value);
   const sinal=Math.min(valorNum($('#f-sinal').value)||Math.round(valor*PCT_SINAL)/100,valor);
-  const saldo=Math.max(valor-sinal,0),venc=vencSaldo(data);
-  const conv=$('#f-conv').value,local=$('#f-local').value.trim(),ent=$('#f-entrega').value,det=$('#f-desc').value.trim();
-  const L=['Olá'+(nome?', '+nome:'')+'! Tudo bem? '+EMO_SMILE,'','Segue o orçamento da *'+NEGOCIO+'*:','',
-    '*Evento:* '+$('#f-tipo').value,'*Data:* '+dataExtenso(data)+(hora?' às '+hora:'')];
-  if(conv)L.push('*Convidados:* '+conv);
-  if(local||ent)L.push('*Entrega:* '+[local,ent?'a partir das '+ent:''].filter(Boolean).join(' · '));
+  const saldo=Math.max(valor-sinal,0),venc=data?vencSaldo(data):'';
+  const material=$('#f-material').value,cor=$('#f-cor').value.trim(),dim=$('#f-dim').value.trim();
+  const modelo=$('#f-modelo').value.trim(),local=$('#f-local').value.trim(),det=$('#f-desc').value.trim();
+  const L=['Olá'+(nome?', '+nome:'')+'! Tudo bem? '+EMO_SMILE,'','Segue o orçamento da *'+NEGOCIO+'*:','','*Serviço:* '+$('#f-tipo').value];
   if(itens.length) {
-    L.push('','*Itens:*');
+    L.push('','*Peças:*');
     itens.forEach(i=>L.push('• '+(i.q?i.q+' × ':'')+i.d+(i.u&&i.q?' - '+brl(i.q*i.u):'')));
-    if(det)L.push('','*Observações:* '+det);
-  } else if(det){
-      L.push('','*Itens:*',...det.split('\n').filter(Boolean).map(l=>'• '+l));
+  } else if(det) {
+    L.push('','*Peças:*',...det.split('\n').filter(Boolean).map(l=>'• '+l));
   }
-  if(valor){
-    L.push('','*Valor total:* '+brl(valor),'','*Condições de pagamento:*','• Sinal de '+brl(sinal)+' para reservar a data');
-    if(saldo>0)L.push(venc>=iso(new Date())
-      ?'• Saldo de '+brl(saldo)+' até '+isoBr(venc)+' ('+DIAS_SALDO+' dias antes do evento)'
-      :'• Saldo de '+brl(saldo)+' a combinar');
+  if(material)L.push('','*Material:* '+material+(cor?' · cor: '+cor:''));
+  if(dim)L.push('*Dimensões:* '+dim);
+  if(itens.length&&det)L.push('','*Observações:* '+det);
+  if(modelo)L.push('*Arquivo do modelo:* '+modelo);
+  if(data)L.push('','*Prazo de entrega:* '+dataExtenso(data));
+  if(local)L.push('*Entrega/retirada:* '+local);
+  if(valor) {
+    L.push('','*Valor total:* '+brl(valor),'','*Condições de pagamento:*','• Sinal de '+brl(sinal)+' para iniciar a produção');
+    if(saldo>0)L.push('• Saldo de '+brl(saldo)+(DIAS_SALDO>0&&venc?' até '+isoBr(venc):' na entrega'));
   }
-  L.push('',PAGAMENTO,'Orçamento válido por '+VALIDADE_DIAS+' dias.','Qualquer dúvida, é só chamar! '+EMO_CUPCAKE);
-  return L.join('\n');
+  L.push('',PAGAMENTO,'Orçamento válido por '+VALIDADE_DIAS+' dias.','Qualquer dúvida, é só chamar!');
 }
 
 /* ===== Clientes ===== */
@@ -231,8 +231,8 @@ async function buscarCEP() {
 }
 
 /* ===== Contrato: editar aqui ===== */
-const CONTRATADA={nome:'xxx',doc:'xxx',end:'xxx'};
-const CIDADE='xxx';
+const CONTRATADO={nome:'xxx',doc:'xxx',end:'xxx'};
+const CIDADE='Jaci';
 const MULTA_PCT=20; // multa em caso de desistência do contratante
 
 const maskCpf=v=>{v=v.replace(/\D/g,'').slice(0,11);
@@ -254,19 +254,22 @@ function gerarContrato(){
     ?itens.map(i=>`<tr><td>${i.q||''}</td><td>${esc(i.d)}</td><td class="r">${i.u?brl(i.u):''}</td><td class="r">${i.u&&i.q?brl(i.q*i.u):''}</td></tr>`).join('')
     :det.split('\n').filter(Boolean).map(l=>`<tr><td></td><td colspan="3">${esc(l)}</td></tr>`).join('');
   const obs=itens.length&&det?`<p><b>Observações:</b> ${esc(det)}</p>`:'';
-  const prazoSaldo=venc>=iso(new Date())?'até '+isoBr(venc)+' ('+DIAS_SALDO+' dias antes do evento)':'a combinar entre as partes';
+  const prazoSaldo=DIAS_SALDO>0?(venc>=iso(new Date())?' até '+isoBr(venc)+' ('+DIAS_SALDO+' dias antes da entrega)':'a combinar entre as partes'):'ne entrega';
+  const material=$('#f-material').value,cor=$('#f-cor').value.trim(),dim=$('#f-dim').value.trim(), modelo=$('#f-modelo').value.trim();
+  const spec=(material||cor||dim||modelo)?`<p><b>Especificações:</b> ${[material&&'material '+esc(material), cor&&'cor '+esc(cor), dim&&'dimensões '+esc(dim), modelo&&'modelo '+esc(modelo)].filter(Boolean).join('; ')}.</p>`:'';
 
   /* cláusulas: modelo de exemplo, substitua pelas do seu contrato */
   const clausulas=[
-    ['DO OBJETO',`A CONTRATADA fornecerá ao CONTRATANTE os doces e produtos descritos na tabela acima, para o evento (${esc(tipo)}) a ser realizado em ${dataExtenso(data)}${hora?', às '+hora:''}.`],
-    ['DA ENTREGA',`A entrega será feita em ${esc(local)||'local a combinar'}${ent?', a partir das '+ent:''}. Os utensílios de propriedade da CONTRATADA, eventualmente cedidos para a ambientação da mesa, deverão ser devolvidos no prazo combinado ou ressarcidos.`],
-    ['DO PAGAMENTO',`O valor total é de ${brl(valor)}, pago da seguinte forma: sinal de ${brl(sinal)} (${String(pct).replace('.',',')}%) na assinatura${saldo>0?' e saldo de '+brl(saldo)+' '+prazoSaldo:''}. ${esc(PAGAMENTO)}`],
-    ['DA DESISTÊNCIA',`Em caso de desistência pelo CONTRATANTE, o sinal pago não será restituído, sendo devida ainda multa de ${MULTA_PCT}% sobre o valor total do contrato, descontado o sinal já pago.`],
-    ['DO DESCUMPRIMENTO PELA CONTRATADA','Se a CONTRATADA não puder cumprir o serviço contratado, os valores já pagos serão devolvidos integralmente ao CONTRATANTE.'],
-    ['DO FORO',`As partes elegem o foro da comarca de ${esc(CIDADE)} para dirimir quaisquer questões deste contrato.`]
-  ];
+    ['DO OBJETO',`O CONTRATADO fabricará, por impressão 3D, as peças descritas na tabela acima, conforme as especificações informadas pelo CONTRATANTE (${esc(tipo)}).`],
+    ['DO PRAZO E DA ENTREGA',`O prazo de entrega é ${dataExtenso(data)}${hora?', às '+hora:''}${local?', em '+esc(local):''}. Atrasos causados por alteração do pedido ou por atraso no pagamento do sinal prorrogam o prazo na mesma medida`],
+    ['DO PAGAMENTO',`O valor total é de ${brl(valor)}, pago da seguinte forma: sinal de ${brl(sinal)} (${String(pct).replace('.', ',')}%) para iniciar a produção${saldo>0?' e saldo de '+brl(saldo)+' '+prazoSaldo:''}. ${esc(PAGAMENTO)}`],
+    ['DAS CARACTERÍSTICAS DO PRODUTO','Por ser um processo de fabricação por camadas, são esperadas pequenas variações de dimensão, textura e tonalidade de cor em relação ao modelo digital, dentro da tolerância normal da tecnologia.']
+    ['DO ARQUIVO E DOS DIREITOS','O CONTRATANTE declara ter os direitos necessários sobre o modelo fornecido, isentando o CONTRATADO de responsabilidade por eventual violação de propriedada intelectual.']
+    ['DO CANCELAMENTO',`Peças personalizadas já em produção não podem ser canceladas sem custo. Em caso de desistência pelo CONTRATANTE, o sinal pago não será restituído, sendo devida ainda multa de ${MULTA_PCT}% sobre o valor total, descontado o sinal.`],
+    ['DO FORO',`As partes elegem o foro da comarca de ${esc(CIDADE)} para dirimir quaisquer questões deste termo.`]
+  ]
 
-  const html=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Contrato - ${esc(nome)}</title>
+  const html=`<!doctype html><html lang="pt-BR"><head><meta charset="utf-8"><title>Termo - ${esc(nome)}</title>
 <style>
 @page{size:A4;margin:18mm}
 body{font:11pt/1.5 Georgia,'Times New Roman',serif;color:#000;margin:0}
@@ -281,16 +284,17 @@ th,td{border:1px solid #444;padding:5px 8px;text-align:left;font-size:10.5pt}
 .marca{position:fixed;top:50%;left:50%;width:65%;transform:translate(-50%,-50%);opacity:.08;z-index:-1;pointer-events:none}
 </style></head><body>
 <img class="marca" src="${new URL(LOGO,location.href).href}" alt="">
-<h1>CONTRATO DE PRESTAÇÃO DE SERVIÇOS DE DOCES</h1>
-<p><b>CONTRATADA:</b> ${esc(CONTRATADA.nome)}, ${esc(CONTRATADA.doc)}, com endereço em ${esc(CONTRATADA.end)}.</p>
+<h1>TERMO DE ENCOMENDA - IMPRESSÃO 3D</h1>
+<p><b>CONTRATADO:</b> ${esc(CONTRATADO.nome)}, ${esc(CONTRATADO.doc)}, com endereço em ${esc(CONTRATADO.end)}.</p>
 <p><b>CONTRATANTE:</b> ${esc(nome)}, CPF ${esc(cpf)}, com endereço em ${esc(end)}.</p>
-<p>As partes acima identificadas firmam o presente contrato, mediante as cláusulas a seguir.</p>
+<p>As partes acima identificadas firmam o presente termo, mediante as cláusulas a seguir.</p>
 <table><thead><tr><th style="width:60px">Qtd.</th><th>Descrição</th><th class="r" style="width:90px">Valor unit.</th><th class="r" style="width:100px">Total</th></tr></thead>
 <tbody>${linhas}<tr><td colspan="3" class="r"><b>Valor total</b></td><td class="r"><b>${brl(valor)}</b></td></tr></tbody></table>
 ${obs}
+${spec}
 ${clausulas.map((c,i)=>`<div class="cl"><p><b>CLÁUSULA ${i+1}ª – ${c[0]}</b></p><p>${c[1]}</p></div>`).join('')}
 <p style="margin-top:18px">${esc(CIDADE)}, ${dataExtenso(iso(new Date()))}.</p>
-<div class="ass"><div>${esc(nome)}<br>CONTRATANTE</div><div>${esc(CONTRATADA.nome)}<br>CONTRATADA</div></div>
+<div class="ass"><div>${esc(nome)}<br>CONTRATANTE</div><div>${esc(CONTRATADO.nome)}<br>CONTRATADO</div></div>
 <div class="ass"><div>Testemunha 1</div><div>Testemunha 2</div></div>
 </body></html>`;
 
@@ -302,9 +306,7 @@ const escrever=()=>{
   const imprimir=()=>{w.focus();w.print()};
   if(img&&!img.complete){img.onload=imprimir;img.onerror=imprimir}else setTimeout(imprimir,300);
 };
-const pre=new Image();
-pre.onload=pre.onerror=escrever;
-pre.src=new URL(LOGO,location.href).href;
+if(!LOGO){escrever()}else{const pre=new Image();pre.onload=pre.onerror=escrever;pre.src=new URL(LOGO,location.href).href}
 }
 
 function numeroWpp() {
@@ -544,7 +546,7 @@ function viewAgenda(){
   const lim=plus(7);
   const cobrar=items.filter(o=>o.kind==='orc'&&o.status==='Confirmado'&&o.data>=today&&pagto(o)&&pagto(o).saldo>0&&pagto(o).venc<=lim).sort((a,b)=>a.data.localeCompare(b.data));
   const cob=cobrar.length?`<div class="item" style="cursor:default"><b>Saldos para cobrar</b>${cobrar.map(o=>`<div class="meta">${esc(o.nome)} · ${brl(pagto(o).saldo)} · até ${dshort(pagto(o).venc)}</div>`).join('')}</div>`:'';
-  return `<h1>AJLS 3D</h1><p class="sub">Pedidos, produção e entrega num só lugar</p>${nxt}${cob}
+  return `<h1>AJLS 3D</h1><p class="sub">Pedidos, produção e entregas num só lugar</p>${nxt}${cob}
   <div class="cal"><div class="cal-h"><button class="nav" data-m="-1" aria-label="Mês anterior">‹</button><strong>${mname}</strong><button class="nav" data-m="1" aria-label="Próximo mês">›</button></div>
   <div class="grid">${g}</div>
   <div class="legend"><span><i style="background:var(--pist)"></i>Confirmado</span><span><i style="background:var(--car)"></i>Em aberto</span><span><i style="background:var(--plum)"></i>Compromisso</span><span><i style="box-shadow:0 0 0 2px var(--red)"></i>Dia cheio</span></div></div>
@@ -554,7 +556,7 @@ function viewAgenda(){
 
 function viewPedidos(){
   const F=['Todos','Novo','Orçado','Confirmado','Na fila', 'Imprimindo', 'Acabamento', 'Pronto', 'Entregue', 'Recusado'];
-  const L=items.filter(o=>o.kind==='orc'&&(filter==='Todos'||o.status===filter||o.status==='Confirmado'&&o.producao===filter)).sort((a,b)=>a.data.localeCompare(b.data));
+  const L=items.filter(o=>o.kind==='orc'&&(filter==='Todos'||o.status===filter||(o.status==='Confirmado'&&o.producao===filter))).sort((a,b)=>a.data.localeCompare(b.data));
   const open=items.filter(o=>o.kind==='orc'&&(o.status==='Novo'||o.status==='Orçado')).length;
   const areceber=items.filter(o=>o.kind==='orc'&&o.status==='Confirmado').reduce((t,o)=>t+(pagto(o)?pagto(o).saldo:0),0);
   return `<h1>Pedidos</h1><p class="sub">${open?open+' aguardando resposta':'Nenhum orçamento em aberto'}${areceber?' · A receber: '+brl(areceber):''}</p>
